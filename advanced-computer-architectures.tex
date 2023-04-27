@@ -175,7 +175,10 @@ Is it true that
 \(\texttt{throughput} = {1} \div { \texttt{average response time}}\)?
 The answer can be given only if it's clear if there's an overlap between core operations.
 
-If there is, then \[ \texttt{throughput} > {1} \div {\texttt{average response time}} \]
+If there is, then 
+\begin{equation}
+  \texttt{throughput} > {1} \div {\texttt{average response time}} 
+\end{equation}
 With pipelining, \textbf{execution time} of a single instruction is \textbf{increased} while the \textbf{average throughput} is \textbf{decreased}.
 
 \subsection{Factors affecting performance}
@@ -256,7 +259,9 @@ It serves as a guide to how much an enhancement will improve performance and how
           \item Determined by \textit{ISA} and \textit{CPU} organization
           \item Overlap among instructions reduces this term
           \item The \textit{CPI} relative to a process \texttt{P} is calculated as:
-                \[ CPI(P) = \dfrac{\texttt{\# of clock cycles to execute P}}{\texttt{number of instructions}} \]
+                \[
+                   CPI(P) = \dfrac{\texttt{\# of clock cycles to execute P}}{\texttt{number of instructions}} 
+                \]
         \end{itemize}
   \item \textbf{Time per cycle} - \textit{TC}:
         \begin{itemize}
@@ -355,6 +360,17 @@ The \textbf{\(3\) different approaches} using means to average a metric are desc
 
 \section{Multithreading and Multiprocessors}
 
+\textbf{Thread (filo):} instruction stream with own PC and data
+\begin{itemize}
+  \item thread may be a process part of a parallel
+  program of multiple processes, or it may
+  be an independent program
+  \item Each thread has all the state (instructions,
+  data, PC, register state, and so on)
+  necessary to allow it to execute
+  \item Threads share single address space   
+\end{itemize}
+
 \subsection{Why multithreading?}
 
 Why is multithreading needed?
@@ -417,8 +433,15 @@ Motivations for the paradigm change:
 
 \subsubsection{Parallel Programming}
 
+\textbf{Multithreading:} something not related to underlying architecture. It concern SO.
+
 Explicit parallelism implies structuring the applications into concurrent and communicating tasks.
-Operating systems offer systems to implement such features: \textbf{threads} and \textbf{processes}.
+Operating systems offer systems to implement such features: \textbf{threads} and \textbf{processes}:
+\begin{itemize}
+  \item process: program in execution. A process doesn't share information directly
+  \item thread: instruction stream with own PC and data. lightweight process. (unità atomica di un processo che deve essere eseguito insieme). 
+\end{itemize}
+
 
 The multitasking is implemented differently based on the characteristics of the \textit{CPU}:
 
@@ -441,7 +464,7 @@ The processor must duplicate the independent state of each thread:
   \bigskip
   \centering
   \tikzfig{image-3.tikz}
-  \caption{Multiplicity of processes and threads}
+  \caption{Multiplicity of processes and threads (in one core (probably))}
   \label{fig:multiplicity-of-processes-and-threads}
   \bigskip
 \end{figure}
@@ -1001,6 +1024,79 @@ Although preserving control dependence is a simple way to preserve program order
 
 \section{Branch Prediction}
 
+\subsection{Performance without branch prediction}
+
+\begin{tabular}{c c}
+  Conditional Branch Instruction: the branch is taken only if the condition is satisfied.
+  The branch target address (BTA) is stored in the Program Counter (PC) instead of the address of
+  the next instruction in the sequential instruction stream.
+  &
+  %\begin{figure}[h!]
+  %  \centering
+    \includegraphics[scale=0.4]{Branch_Target_Buffer.png}
+  %  \caption{Branch target buffer}
+  %  \label{fig:Branch target buffer}
+  %\end{figure}
+\end{tabular}
+
+\subsubsection*{Execution of conditional branches for 5-stage MIPS pipeline}
+
+\[ beq\ \$x,\$y,\ \text{offset} \]
+
+\includegraphics[scale=0.6]{Execution_of_conditional_branches_for_5-stage_MIPS_pipeline.png}
+
+\begin{enumerate}
+  \item Instruction fetch and PC increment
+  \item Registers read (\$x and \$y) from Register File.
+  \item ALU operation to compare registers (\$x and \$y) to derive
+  Branch Outcome (branch taken or branch not taken). Computation of Branch Target Address (PC+4+offset):
+  the value (PC+4) is added to the least significant 16
+  bit of the instruction after sign extension
+  \item The result of registers comparison from ALU is used to
+  decide the value to be stored in the PC: (PC+4) or
+  (PC+4+offset).    
+\end{enumerate}
+
+Results:
+\begin{itemize}
+  \item Branch Outcome and Branch Target Address are
+  ready at the end of the EX stage (3th stage)
+  \item Conditional branches are solved when PC is updated
+  at the end of the ME stage (4th stage)
+\end{itemize}
+
+\textbf{The Problem of Control Hazards}
+
+Control hazards: Attempt to make a decision on the next instruction to fetch before the branch
+condition is evaluated.
+
+\subsubsection{Branch Hazards: Example}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[scale=0.3]{Branch_Hazards_Example.png}
+\end{figure}
+
+The branch instruction may or may not change the PC in MEM stage, but the next 3 instructions are fetched and their execution is
+started.
+\begin{itemize}
+  \item If the branch is not taken, the pipeline execution is OK
+  \item If the branch is taken, it is necessary to flush the next 3 instructions
+  in the pipeline and fetched the lw instruction at the branch target
+  address (L1) 
+\end{itemize}
+
+\subsubsection{Branch Stalls without Forwarding}
+\begin{figure}[h!]
+  \centering
+  \includegraphics[scale=0.4]{Branch_Stalls_without_Forwarding.png}
+  \caption{Branch stalls without forwarding}
+  \label{fig:Branch-stalls-without-forwarding}
+\end{figure}
+
+
+
+
 The main goal of the \textbf{branch prediction} is to evaluate as early as possible the outcome of a branch instruction.
 Its performance depends on:
 
@@ -1015,6 +1111,8 @@ Its performance depends on:
           \item the importance of accurate branch prediction is higher in programs with higher branch frequency
         \end{itemize}
 \end{itemize}
+
+\smallskip
 
 There are many methods to deal with performance loss due to branch hazards:
 
@@ -1043,6 +1141,8 @@ There are \(5\) commonly used branch prediction techniques:
 
 Each one of these techniques will be discussed in the following Sections \textit{(from \ref{sec:branch-always-not-taken} to \ref{sec:delayed-branch})}.
 
+\newpage
+
 \subsubsection{Branch Always Not Taken}
 \label{sec:branch-always-not-taken}
 
@@ -1069,6 +1169,8 @@ There is a one-cycle penalty.
   \label{fig:branch-always-not-taken-fail}
   \bigskip
 \end{figure}
+
+\newpage
 
 \subsubsection{Branch Always Taken}
 \label{sec:branch-always-taken}

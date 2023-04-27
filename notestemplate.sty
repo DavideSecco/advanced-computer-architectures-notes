@@ -77,7 +77,7 @@
 % subparagraph format
 \titleformat{\subparagraph}[runin]{\normalfont\normalsize\bfseries}{\thesubparagraph}{0.5em}{}
 % tighter lists
-\setlist[itemize]{noitemsep}
+\setlist[itemize]{noitemsep, topsep=0pt}
 \setlist[enumerate]{noitemsep}
 % table spacing
 \setlength{\tabcolsep}{1em} % for the horizontal padding
@@ -86,7 +86,7 @@
 %%% GENERAL DOCUMENT SETTINGS
 
 % resets equation numbering when starting a new section.
-\numberwithin{equation}{section}
+\numberwithin{equation}{subsection}
 % page margins
 \geometry{left=2cm,right=2cm,bottom=2.5cm,top=2.5cm}
 % no indent for new paragraphs
