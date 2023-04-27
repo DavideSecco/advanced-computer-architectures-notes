@@ -1,7 +1,7 @@
 \begin{tikzpicture}
 	\begin{pgfonlayer}{nodelayer}
-		\node [style=right align] (0) at (-0.25, -0.5) {\texttt{A}};
-		\node [style=right align] (1) at (-0.5, -2.5) {\texttt{B}};
+		\node [style=left align] (0) at (-0.5, -0.5) {\texttt{A}};
+		\node [style=left align] (1) at (-0.5, -2.5) {\texttt{B}};
 		\node [style=none] (2) at (0, 0) {};
 		\node [style=none] (3) at (0, -1) {};
 		\node [style=none] (4) at (4, 0) {};
@@ -63,7 +63,7 @@
 		\node [style=top align] (68) at (6, 1) {\texttt{16 bits}};
 		\node [style=top align] (69) at (10, 1) {\texttt{16 bits}};
 		\node [style=top align] (70) at (14, 1) {\texttt{16 bits}};
-		\node [style=right align] (71) at (-0.25, -7.5) {\texttt{B}};
+		\node [style=left align] (71) at (-0.25, -7.5) {\texttt{B}};
 		\node [style=none] (72) at (0, -7) {};
 		\node [style=none] (73) at (0, -8) {};
 		\node [style=none] (74) at (4, -7) {};

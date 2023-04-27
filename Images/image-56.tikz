@@ -40,8 +40,8 @@
 		\node [style=none] (39) at (13.5, -3.5) {};
 		\node [style=none] (40) at (13.5, -5) {};
 		\node [style=none] (41) at (12.25, -5) {};
-		\node [style=right align, text={rgb,255: red,191; green,0; blue,64}] (42) at (-1.5, -2.75) {\texttt{CRITICAL}};
-		\node [style=left align, text={rgb,255: red,191; green,0; blue,64}] (43) at (13.5, -4.25) {\texttt{CRITICAL}};
+		\node [style=left align, text={rgb,255: red,191; green,0; blue,64}] (42) at (-1.5, -2.75) {\texttt{CRITICAL}};
+		\node [style=right align, text={rgb,255: red,191; green,0; blue,64}] (43) at (13.5, -4.25) {\texttt{CRITICAL}};
 	\end{pgfonlayer}
 	\begin{pgfonlayer}{edgelayer}
 		\draw [style=light fill] (3.center)

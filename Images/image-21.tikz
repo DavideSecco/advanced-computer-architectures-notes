@@ -111,8 +111,8 @@
 		\node [style=none] (184) at (-8, -0.5) {\(k\)-bits branch address};
 		\node [style=none] (185) at (12, -0.25) {};
 		\node [style=none] (186) at (12, -9.75) {};
-		\node [style=left align] (187) at (12.5, -5) {\(2^k\) entries};
-		\node [style=left align] (188) at (17.5, -12.5) {\(m\)-bits global branch history};
+		\node [style=right align] (187) at (12.5, -5) {\(2^k\) entries};
+		\node [style=right align] (188) at (17.5, -12.5) {\(m\)-bits global branch history};
 		\node [style=none] (190) at (4.5, -14) {};
 		\node [style=none] (191) at (4.5, -15.75) {};
 		\node [style=none] (192) at (4.5, -16.5) {\texttt{T/NT} branch prediction};
@@ -136,7 +136,7 @@
 		\node [style=none] (218) at (14, -13) {};
 		\node [style=none] (224) at (17, -15.25) {};
 		\node [style=none] (225) at (17, -10.75) {};
-		\node [style=left align] (226) at (17.5, -13.5) {\(m\)-items shift register};
+		\node [style=right align] (226) at (17.5, -13.5) {\(m\)-items shift register};
 		\node [style=none] (227) at (-8, -4.5) {};
 		\node [style=none] (228) at (-2.25, -4.5) {};
 		\node [style=none] (229) at (-8, -1) {};

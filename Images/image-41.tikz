@@ -1,16 +1,16 @@
 \begin{tikzpicture}
 	\begin{pgfonlayer}{nodelayer}
 		\node [style=none] (51) at (6.5, -4.5) {};
-		\node [style=left align] (0) at (0.25, 0.5) {\small\texttt{add r1, r2, r3}};
-		\node [style=left align] (1) at (0.25, -0.5) {\small\texttt{subi r4, r1, \#4}};
-		\node [style=left align] (2) at (0.25, -1.5) {\small\texttt{slli r4, r4, \#2}};
+		\node [style=right align] (0) at (0.25, 0.5) {\small\texttt{add r1, r2, r3}};
+		\node [style=right align] (1) at (0.25, -0.5) {\small\texttt{subi r4, r1, \#4}};
+		\node [style=right align] (2) at (0.25, -1.5) {\small\texttt{slli r4, r4, \#2}};
 		\node [style=none] (3) at (6.5, 1) {};
 		\node [style=none] (4) at (0, 1) {};
 		\node [style=none] (5) at (0, -8) {};
 		\node [style=none] (6) at (6.5, -8) {};
-		\node [style=left align] (8) at (0.25, -5.5) {\small\texttt{lw r3, 3(r4)}};
-		\node [style=left align] (9) at (0.25, -6.5) {\small\texttt{add r2, r2, r3}};
-		\node [style=left align] (10) at (0.25, -7.5) {\small\texttt{sw 8(r4), r2}};
+		\node [style=right align] (8) at (0.25, -5.5) {\small\texttt{lw r3, 3(r4)}};
+		\node [style=right align] (9) at (0.25, -6.5) {\small\texttt{add r2, r2, r3}};
+		\node [style=right align] (10) at (0.25, -7.5) {\small\texttt{sw 8(r4), r2}};
 		\node [style=none] (13) at (-7, -3.5) {};
 		\node [style=none] (14) at (-0.25, -3.5) {};
 		\node [style=left align, text={rgb,255: red,191; green,0; blue,64}] (15) at (-7, -3) {\small\texttt{INTERRUPT EVENT}};

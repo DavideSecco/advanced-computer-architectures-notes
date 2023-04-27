@@ -14,7 +14,7 @@
 		\node [style=none] (12) at (3, 0.25) {\texttt{DEST}};
 		\node [style=none] (13) at (5, 0.25) {\texttt{SRC1}};
 		\node [style=none] (14) at (7, 0.25) {\texttt{SRC2}};
-		\node [style=right align] (15) at (-0.25, 0.25) {instruction 1};
+		\node [style=left align] (15) at (-0.25, 0.25) {instruction 1};
 		\node [style=none] (16) at (11, 0.75) {};
 		\node [style=none] (17) at (13, -0.25) {};
 		\node [style=none] (18) at (13, 0.75) {};
@@ -29,7 +29,7 @@
 		\node [style=none] (27) at (14, 0.25) {\texttt{DEST}};
 		\node [style=none] (28) at (16, 0.25) {\texttt{SRC1}};
 		\node [style=none] (29) at (18, 0.25) {\texttt{SRC2}};
-		\node [style=left align] (30) at (19.25, 0.25) {instruction 2};
+		\node [style=right align] (30) at (19.25, 0.25) {instruction 2};
 		\node [style=none] (31) at (1, -5) {};
 		\node [style=none] (32) at (1, -9) {};
 		\node [style=none] (33) at (12, -5) {};

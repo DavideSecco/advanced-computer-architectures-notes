@@ -69,7 +69,7 @@
 		\node [style=none] (112) at (2, -10.5) {\texttt{v3}};
 		\node [style=none] (113) at (4.25, -11.5) {};
 		\node [style=none] (117) at (5.25, -10.5) {};
-		\node [style=left align] (118) at (5, -11.25) {\footnotesize vector length};
+		\node [style=right align] (118) at (5, -11.25) {\footnotesize vector length};
 		\node [style=none] (120) at (3.25, -12.5) {\texttt{add.vv v3, v1, v2}};
 	\end{pgfonlayer}
 	\begin{pgfonlayer}{edgelayer}

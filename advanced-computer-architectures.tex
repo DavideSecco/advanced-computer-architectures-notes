@@ -1026,20 +1026,20 @@ Although preserving control dependence is a simple way to preserve program order
 
 \subsection{Performance without branch prediction}
 
-\begin{tabular}{c c}
+\begin{tabular}{m{30em} m{14em}}
   Conditional Branch Instruction: the branch is taken only if the condition is satisfied.
   The branch target address (BTA) is stored in the Program Counter (PC) instead of the address of
   the next instruction in the sequential instruction stream.
   &
   %\begin{figure}[h!]
   %  \centering
-    \includegraphics[scale=0.4]{Branch_Target_Buffer.png}
+    \includegraphics[scale=0.25]{Branch_Target_Buffer.png}
   %  \caption{Branch target buffer}
   %  \label{fig:Branch target buffer}
   %\end{figure}
 \end{tabular}
 
-\subsubsection*{Execution of conditional branches for 5-stage MIPS pipeline}
+\subsubsection{Execution of conditional branches for 5-stage MIPS pipeline}
 
 \[ beq\ \$x,\$y,\ \text{offset} \]
 
