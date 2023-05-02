@@ -1024,6 +1024,14 @@ Although preserving control dependence is a simple way to preserve program order
 
 \section{Branch Prediction}
 
+\begin{definition}
+  \textbf{Target} = blocco di codice da eseguire quando il branch viene preso, cioè nel caso di un loop, il corpo del loop
+\end{definition}
+
+\begin{definition}
+  \textbf{BTA (Branch target address)} = address of the next instruction to execute if the branch is taken. 
+\end{definition}
+
 \subsection{Performance without branch prediction}
 
 \begin{tabular}{m{30em} m{14em}}
@@ -1033,7 +1041,7 @@ Although preserving control dependence is a simple way to preserve program order
   &
   %\begin{figure}[h!]
   %  \centering
-    \includegraphics[scale=0.25]{Branch_Target_Buffer.png}
+    \includegraphics[scale=0.22]{Branch_Target_Buffer.png}
   %  \caption{Branch target buffer}
   %  \label{fig:Branch target buffer}
   %\end{figure}
@@ -1070,7 +1078,7 @@ Results:
 Control hazards: Attempt to make a decision on the next instruction to fetch before the branch
 condition is evaluated.
 
-\subsubsection{Branch Hazards: Example}
+\paragraph{Branch Hazards: Example}
 
 \begin{figure}[h!]
   \centering
@@ -1080,22 +1088,100 @@ condition is evaluated.
 The branch instruction may or may not change the PC in MEM stage, but the next 3 instructions are fetched and their execution is
 started.
 \begin{itemize}
-  \item If the branch is not taken, the pipeline execution is OK
-  \item If the branch is taken, it is necessary to flush the next 3 instructions
+  \item If the \textbf{branch} is \textbf{not taken}, the pipeline \textbf{execution} is \textbf{OK}
+  \item If the \textbf{branch} is \textbf{taken}, it is necessary to \textbf{flush} the \textbf{next 3 instructions}
   in the pipeline and fetched the lw instruction at the branch target
   address (L1) 
 \end{itemize}
 
-\subsubsection{Branch Stalls without Forwarding}
-\begin{figure}[h!]
+\newpage
+
+\subsubsection{Branch Stalls without/with Forwarding}
+
+\begin{tabular}{m{24em} m{24em}}
+  \includegraphics[scale=0.23]{Branch_Stalls_without_Forwarding.png}
+  &
+  \includegraphics[scale=0.2]{Branch_Stalls_with_Forwarding.png}
+  \\
+  Without forwarding
+  & 
+  With forwarding
+\end{tabular}
+
+To stall the pipeline until the branch decision is taken (stalling until resolution) and then fetch the
+correct instruction flow:
+\begin{itemize}
+  \item \textbf{Without forwarding:} three clock cycles
+  \item \textbf{With forwarding:} for two clock cycles  
+\end{itemize}
+
+If the branch is not taken, the three cycles penalty is not justified $\rightarrow$ throughput reduction.
+
+\smallskip
+
+We can assume the branch not taken, and flush the next 3 instructions in the pipeline only if the
+branch will be taken.
+
+\paragraph{Early Evaluation of the PC}
+To improve performance in case of branch hazards, \textbf{we need to add hardware resources} to:
+\begin{enumerate}
+  \item Compare registers to derive branch outcome
+  \item Compute branch target address
+  \item Update the PC register  
+\end{enumerate}
+as soon as possible in the pipeline.
+
+\smallskip
+
+\begin{remarks}
+  MIPS processor compares registers, computes branch target address and updates PC during ID stage.  
+\end{remarks}
+
+\begin{figure}[ht!]
+  \includegraphics[scale=0.38]{MIPS_Processor_Early_Evaluation_of_the_PC.png}
+\end{figure}
+
+\newpage
+
+The final result is:
+\begin{figure}[ht!]
   \centering
-  \includegraphics[scale=0.4]{Branch_Stalls_without_Forwarding.png}
-  \caption{Branch stalls without forwarding}
-  \label{fig:Branch-stalls-without-forwarding}
+  \includegraphics[scale=0.3]{Images/MIPS_Processor_Early_Evaluation_of_the_PC_2.png}
 \end{figure}
 
 
+\textbf{Issue:} But there is another problem in some situation (es. loops):
 
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[scale=0.3]{Early_Evaluation_of_the_PC_an_issue.png}
+\end{figure}
+
+In that case we have a Data Dependece on \$1, since the computation of \$1 is 
+ready after the execution stage of addi, to compute the evaluation of beq 
+we have to wait until the value is ready (otherwise we wuold use the old value 
+of \$1).
+
+We know that after a branch instruction we have 1 stall, so in the instruction
+after beq we have to put another stall.
+
+\medskip
+
+With the branch decision made during ID stage, there is
+a reduction of the cost associated with each branch
+\begin{remarks} \textbf{Branch penalty:}
+  We need
+  \begin{itemize}
+    \item only one-clock-cycle stall after each branch
+  \end{itemize}
+  Or
+  \begin{itemize}
+    \item a flush of only one instruction following the branch 
+  \end{itemize}
+  This is related to branch itself, not considering problems related data dependences.
+\end{remarks}
+
+\subsection{Introduction to branch prediction}
 
 The main goal of the \textbf{branch prediction} is to evaluate as early as possible the outcome of a branch instruction.
 Its performance depends on:
@@ -1127,6 +1213,8 @@ There are many methods to deal with performance loss due to branch hazards:
 
 In both cases, care must be taken not to change the processor state until the branch is definitely known.
 
+\newpage
+
 \subsection{Static techniques}
 
 There are \(5\) commonly used branch prediction techniques:
@@ -1141,16 +1229,15 @@ There are \(5\) commonly used branch prediction techniques:
 
 Each one of these techniques will be discussed in the following Sections \textit{(from \ref{sec:branch-always-not-taken} to \ref{sec:delayed-branch})}.
 
-\newpage
-
 \subsubsection{Branch Always Not Taken}
 \label{sec:branch-always-not-taken}
 
 The branch is always assumed as \textbf{not taken}, thus the sequential instruction flow that has been fetched can continue as if the branch condition was not satisfied.
-If the condition in the state \texttt{ID} will result as not satisfied \textit{(and the prediction is correct)} performance can be preserved.
-
-If the condition in stage \texttt{ID} will result in satisfied \textit{(and the prediction is incorrect)} the branch is taken: the next instruction already fetched is flushed \textit{(turned into a \texttt{nop})} and the execution is restarted by fetching the instruction at the branch target address.
-There is a one-cycle penalty.
+\begin{itemize}
+  \item If the condition in stage \texttt{ID} will result in not satisfied \textit{(and the prediction is correct)} performance can be preserved.
+  \item If the condition in stage \texttt{ID} will result in satisfied \textit{(and the prediction is incorrect)} the branch is taken: the next instruction already fetched is flushed \textit{(turned into a \texttt{nop})} and the execution is restarted by fetching the instruction at the branch target address.
+  There is a one-cycle penalty. 
+\end{itemize}
 
 \begin{figure}[htbp]
   \bigskip
@@ -1170,7 +1257,7 @@ There is a one-cycle penalty.
   \bigskip
 \end{figure}
 
-\newpage
+
 
 \subsubsection{Branch Always Taken}
 \label{sec:branch-always-taken}
@@ -1179,6 +1266,8 @@ An alternative scheme is to consider \textbf{every branch as taken}: as soon as 
 
 The predicted-taken scheme makes sense for pipelines where the branch target is known before the actual outcome.
 This is not the case within \textit{MIPS} pipeline \textit{(where the branch target is known only after the operation outcome)}, so \textbf{there is no advantage in this approach}.
+
+\newpage
 
 \subsubsection{Backward Taken Forward Not Taken}
 \label{sec:backward-taken-forward-not-taken}
@@ -1199,7 +1288,7 @@ The prediction is based on the branch direction:
 \subsubsection{Profile Driven Prediction}
 \label{sec:profile-driven-prediction}
 
-The branch prediction is based on profiling information collected from earlier runs.
+The branch prediction is \textit{based} on profiling information collected \textit{from earlier runs}.
 This method can use compiler hints, and it's potentially more effective than the other ones;
 however, it's also the most complicated between the \(5\) as it needs additional hardware.
 
@@ -1278,10 +1367,20 @@ An illustration of this strategy is represented in Figure~\ref{fig:from-before}.
   \bigskip
 \end{figure}
 
+\begin{remarks}
+  When to use it: when there exists a indipendent instruction before the branch 
+\end{remarks}
+
 \paragraph{From target}
 
-The use of a register in the branch condition prevents any instructions with that register as a destination from being moved after the branch itself.
+The use of a register in the branch condition prevents any instructions with that 
+register as a destination from being moved after the branch itself (\$1 in our case).
+
+\smallskip
+
 The branch delay slot is scheduled from \textbf{the target of the branch} \textit{(usually the target instruction will need to be copied because it can be reached by another path)}.
+
+\smallskip
 
 This strategy is preferred when the branch is taken with high probability, such as loop branches \textbf{(backward branches)}.
 An illustration of this strategy is represented in Figure~\ref{fig:from-target}.
@@ -1295,13 +1394,20 @@ An illustration of this strategy is represented in Figure~\ref{fig:from-target}.
   \bigskip
 \end{figure}
 
+In other word: if there is high probability that i take the branch, i can put an instruction 
+of the target branch since i will (high) probably execute it. I have to rewrite the target 
+instruction because it can be reached by another path.
+
+\begin{remarks}
+  When to use it: when there is an high probability that the branch is taken (loops) 
+\end{remarks}
+
 \paragraph{From fall through}
 
 The use of a register in the branch condition prevents any instructions with that register as a destination from being moved after the branch itself \textit{(like what happens in the from target technique)}.
-The branch delay slot is scheduled from \textbf{the not taken fall through path}.
+The branch delay slot is scheduled with an instruction from \textbf{the not taken fall through path}.
 
-This strategy is preferred when the branch is not taken with high probability, such as \textbf{forward branches}.
-An illustration of this strategy is represented in Figure~\ref{fig:from-fall-through}.
+This strategy is \textit{preferred} when the branch \textit{is not taken with high probability}, such as \textbf{forward branches}.
 
 \begin{figure}[htbp]
   \bigskip
@@ -1312,31 +1418,45 @@ An illustration of this strategy is represented in Figure~\ref{fig:from-fall-thr
   \bigskip
 \end{figure}
 
-In order to make the optimization legal for the target, it must be ok to execute the moved instruction when the branch goes in the expected direction;
-the instruction in the branch delay slot is executed but its result is wasted \textit{(if the program will still execute correctly)}.
+NON HO CAPITO QUESTA PARTE: 
+
+\smallskip
+
+In order to make the optimization legal for the target, 
+it must be ok to execute the moved instruction when the branch goes in the unexpected direction;
+the instruction in the branch delay slot is executed but its result is wasted 
+\textit{(if the program will still execute correctly)}.
 
 For example, if the destination register is an unused temporary register when the branch goes in an unexpected direction.
+
+\begin{remarks}
+  When to use it: when there is an high probability that the branch is not taken (if) 
+\end{remarks}
+
+\newpage
 
 \subsection{Dynamic Branch Prediction}
 \label{sec:dynamic-branch-prediction}
 
 \textit{Basic idea}: use the past branch behaviour to predict the future.
 
-Hardware is used to dynamically predict the outcome of a branch: the prediction will depend on the behaviour of the branch at \textbf{compile time} and will change if the branch changes its behaviour during \textbf{run time}.
+The prediction will depend on the behavior of the branch at \textbf{run time} and
+will change if the branch changes its behavior \textbf{during execution}.
 
-\bigskip
-Dynamic Branch Prediction is based on two interacting mechanisms:
-
+\medskip
+What do we have to predict/compute? 
 \begin{enumerate}
-  \item \textbf{Branch Outcome Predictor} \textit{(BOP)}
+  \item \textbf{Branch Outcome Predictor} \textit{(BOP)} (Do I or not take the jump?)
         \begin{itemize}
-          \item used to predict the direction of a branch \textit{(taken or not taken)}
+          \item used to predict the direction of a branch \textit{(taken or not taken)} 
         \end{itemize}
-  \item \textbf{Branch Target Predictor} \textit{(BTP)}
+  \item \textbf{Branch Target Predictor} \textit{(BTP)} (Which is the address of the next instruction?)
         \begin{itemize}
           \item used to predict the branch target address in case of taken branch
         \end{itemize}
 \end{enumerate}
+
+\medskip
 
 These modules are used by the \textit{Instruction Fetch Unit} to predict the next instruction to read in the instruction cache \textit{(also called I-cache)}:
 
@@ -1344,6 +1464,8 @@ These modules are used by the \textit{Instruction Fetch Unit} to predict the nex
   \item Branch \textbf{is not taken}: \texttt{PC} is incremented
   \item Branch \textbf{is taken}: \textit{BTP} gives the target address
 \end{itemize}
+
+How to do all of that? Branch target buffer.
 
 \subsubsection{Branch Target Buffer}
 
@@ -1373,6 +1495,17 @@ The structure and operation of the \textit{BTB} is shown in Figure~\ref{fig:stru
   \bigskip
 \end{figure}
 
+\begin{remarks}
+  MA CHE POI: come funziona se io trovo il PC nel BTB ma essendo solo i k meno significativi
+  io potrei anche aver memorizzato anche un istruzione sbagliata.
+  Nel caso poi la previsione sia taken quando mi accorgo che i due BTA (quello memorizzato
+  nella BTB e quello invece vero) sono diversi?  
+
+  MI sa che noi in realtà calcoliamo sempre se il salto va preso (ovviamente) ma anche il BTA,
+  quello che stiamo facendo è solo predizione!
+\end{remarks}
+
+
 \subsubsection{Branch History Table}
 
 The \textbf{Branch History Table} contains \(1 \, bit\) for each entry that says whether the branch was recently taken or not.
@@ -1387,6 +1520,15 @@ The structure of the \textit{BTB} is shown in Figure~\ref{fig:structure-of-BHT}.
   \label{fig:structure-of-BHT}
   \bigskip
 \end{figure}
+
+\begin{remarks}
+  For each PC, the BTB stores:
+  \begin{itemize}
+    \item if the PC is a branch
+    \item if the branch is predicted taken/not taken (BHT - BOP)
+    \item the address of the branch if taken (BTP)
+  \end{itemize}
+\end{remarks}
 
 The prediction is a hint that it is assumed to be correct and fetching begins in the predicted direction.
 If the hint turns out to be wrong, the prediction bit is inverted and stored back;
@@ -1443,6 +1585,8 @@ That situation causes two wrong predictions:
         \end{itemize}
 \end{itemize}
 
+\smallskip
+
 To fix this kind of behaviour, the \(2\)-bit \textit{BHT} was introduced.
 
 \subsubsection{\textit{2}-bit Branch History Table}
@@ -1476,7 +1620,7 @@ Its structure is represented in Figure~\ref{fig:2-bit-BHT-as-FSA}.
     \end{tikzpicture}
   }
 
-  \caption{\(2\)-bit \textit{BHT} as \textit{FSA}}
+  \caption{\(2\)-bit \textit{BHT} as \textit{FSA} (FSA = four state algorithm (?))}
   \label{fig:2-bit-BHT-as-FSA}
   \bigskip
 \end{figure}
@@ -1492,9 +1636,13 @@ Otherwise, it's predicted as untaken.
 As in the \(2\)-bit scheme, the counter is incremented on a taken branch and decremented on an untaken branch.
 Studies on \(n\)-bit predictors have shown that \(2\) bits behave almost as well \textit{(so using more than \(2\) bits is almost useless)}.
 
+\newpage
+
 \subsection{Correlating Branch Predictors}
 
 \textit{Basic idea}: the behaviour of recent branches is correlated, that is the recent behaviour of other branches rather than just the current branch that we are trying to predict can influence the prediction of the current branch.
+
+\medskip
 
 The \textbf{Correlating Branch Predictors} are predictors that use the behaviour of other branches to make a prediction.
 They are also called \textit{\(2\)-level Predictors}.
@@ -1510,6 +1658,20 @@ A \((1, 1)\) Correlating Predictor denotes a \(1\)-bit predictor with \(1\)-bit 
   \label{fig:structure-of-CBP}
   \bigskip
 \end{figure}
+
+\begin{remarks}
+  La mia predizione in questo caso sarà funzione del risultato (non la predizione!) del'ultimo branch:
+  \begin{itemize}
+    \item Se l'ultimo branch prima di quello che sto valutando è stato \textbf{not taken}:
+    \begin{itemize}
+      \item Prenderò in cosiderazione la BHT T0
+    \end{itemize}
+    \item Se l'ultimo branch prima di quello che sto valutando è stato \textbf{taken}:
+    \begin{itemize}
+      \item Prenderò in cosiderazione la BHT T1
+    \end{itemize}
+  \end{itemize}
+\end{remarks}
 
 \subsubsection{\textit{(m, n)} Correlating Branch Predictors}
 
@@ -1596,7 +1758,7 @@ The objective of the \textit{ILP} is to improve the \textit{CPI}, with the ideal
 The \textit{ILP} implies a potential overlap of execution among unrelated instructions.
 This goal is only achievable if there is no \textbf{hazards} \textit{(as described in Section~\ref{sec:pipeline-hazards})}.
 
-\bigskip
+\medskip
 Two properties are critical to program correctness \textit{(and normally preserved by maintaining both data and control dependences)}:
 
 \begin{enumerate}
@@ -1620,7 +1782,7 @@ Usually, hardware-intensive approaches dominate desktop and server markets.
 
 The hardware reorders the instruction execution to reduce pipeline stall while maintaining data flow and exception behaviour.
 
-\bigskip
+\medskip
 \textit{Properties of the Dynamic Scheduling}:
 
 \begin{enumerate}
@@ -1633,7 +1795,7 @@ The hardware reorders the instruction execution to reduce pipeline stall while m
         \end{itemize}
 \end{enumerate}
 
-\bigskip
+\smallskip
 The two main techniques used by hardware to minimize stalls are:
 
 \begin{itemize}
@@ -1659,7 +1821,7 @@ The two main techniques used by hardware to minimize stalls are:
         \end{itemize}
 \end{itemize}
 
-\bigskip
+\medskip
 \textbf{Advantages} of dynamic scheduling:
 \begin{itemize}
   \item It enables handling some cases where dependencies are \textbf{unknown} at compile time
@@ -1686,7 +1848,7 @@ Furthermore, it has a low number of \textit{FUs} and it does not issue structura
 
 It solves the issue of data dependencies that cannot be hidden with bypassing or forwarding due to the hardware stalls of the pipeline by allowing out-of-order execution and commit of instructions.
 
-\bigskip
+\medskip
 The scoreboard centralizes hazard management.
 It can avoid them by:
 
@@ -1706,7 +1868,7 @@ It can avoid them by:
         \end{itemize}
 \end{itemize}
 
-\bigskip
+\medskip
 The scoreboard is operated by:
 
 \begin{enumerate}
@@ -1765,6 +1927,8 @@ An illustration of the new pipeline is represented in Figure~\ref{fig:pipeline-o
   \bigskip
 \end{figure}
 
+\newpage
+
 \paragraph{Four stages of Scoreboard Control}
 
 The four stages of scoreboard control are:
@@ -1799,7 +1963,7 @@ The four stages of scoreboard control are:
         \end{itemize}
 \end{itemize}
 
-\bigskip
+\smallskip
 This structure creates a few implications:
 
 \begin{itemize}

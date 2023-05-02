@@ -11,6 +11,7 @@
 		\node [style=none] (69) at (22, -6) {};
 		\node [style=none] (70) at (22, 0) {};
 		\node [style=none] (71) at (29, 0.5) {predicted target \texttt{PC}};
+		\node [style=none] (72) at (16.75, 1.5) {(\texttt{LSB = Least significant bits})};
 		\node [style=none] (72) at (16.75, 0.5) {\texttt{LSB} of the \texttt{PC}};
 		\node [style=none] (73) at (16, -6) {};
 		\node [style=none] (74) at (16, -9.25) {};
