@@ -1651,12 +1651,12 @@ Their scheme is represented in Figure~\ref{fig:structure-of-CBP}.
 A \((1, 1)\) Correlating Predictor denotes a \(1\)-bit predictor with \(1\)-bit of correlation: the behaviour of the last branch is used to choose among a pair of \(1\)-bit branch predictors.
 
 \begin{figure}[htbp]
-  \bigskip
+  \smallskip
   \centering
   \tikzfig[0.8]{image-20.tikz}
   \caption{Structure of the \textit{Correlating Branch Predictors}}
   \label{fig:structure-of-CBP}
-  \bigskip
+  \smallskip
 \end{figure}
 
 \begin{remarks}
@@ -1673,6 +1673,8 @@ A \((1, 1)\) Correlating Predictor denotes a \(1\)-bit predictor with \(1\)-bit 
   \end{itemize}
 \end{remarks}
 
+\newpage
+
 \subsubsection{\textit{(m, n)} Correlating Branch Predictors}
 
 In general, \((m, n)\) correlating predictors records last \(m\) branches to choose from \(2^m\) \textit{BHTs}, each of which is a \(n\)-bit predictor.
@@ -1682,12 +1684,12 @@ The branch prediction buffer can be indexed by using a concatenation of low orde
 The general structure of a \((m, n)\) \textit{CBP} is represented in Figure~\ref{fig:m-n-CBP}.
 
 \begin{figure}[htbp]
-  \bigskip
+  \smallskip
   \centering
   \tikzfig[0.8]{image-21.tikz}
   \caption{Structure of the \textit{(m, n) Correlating Branch Predictors}}
   \label{fig:m-n-CBP}
-  \bigskip
+  \smallskip
 \end{figure}
 
 \paragraph{A \textit{(2, 2) Correlating Branch Predictor}}
@@ -1701,16 +1703,27 @@ It uses the \(2\)-bit global history to choose among the \(4\) \textit{BHTs}.
   \item \(2\)-bit global history is used to choose one of four entries in a row \textit{(one of the four \textit{BHTs})}
 \end{itemize}
 
+\begin{figure}[htbp]
+  \smallskip
+  \centering
+  \tikzfig[0.8]{image-21-copy.tikz}
+  \caption{Structure of the \textit{(2, 2) Correlating Branch Predictors}}
+  \label{fig:2-2-CBP}
+  \smallskip
+\end{figure}
+
 \paragraph{Accuracy of Correlating Predictors}
 
 A \(2\)-bit predictor with no global history is simply a \((0, 2)\) predictor.
 
 By comparing the performance of a \(2\)-bit simple predictor with \(4000\) entries and a \(2, 2\) correlating predictor with \(1000\) entries, we find out that the latter not only outperforms the \(2\)-bit predictor with the same number of total bits but also often outperforms a \(2\)-bit predictor with an unlimited number of entries.
 
+\newpage
+
 \subsection{Two Level Adaptive Branch Predictors}
 
 The first level history is recorded in one \textit{(or more)} \(k\)-bit shift register called \textit{Branch History Register (BHR)} which records the outcomes of the \(k\) most recent branches.
-The second level history is recorded in ore \textit{(or more)} tables called \textit{Pattern History Table (PHT)} of two bits saturating counters.
+The second level history is recorded in one \textit{(or more)} tables called \textit{Pattern History Table (PHT)} of two bits saturating counters.
 
 The BHR is used to index the PHT to select which \(2\)-bit counter to use.
 Once the two-bit counter is selected, the prediction is made using the same method as in the two bits counter scheme.

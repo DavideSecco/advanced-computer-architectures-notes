@@ -73,7 +73,7 @@
 		\node [style=none] (114) at (-0.25, -3.5) {};
 		\node [style=none] (115) at (2.25, -3.5) {};
 		\node [style=none] (116) at (4.75, -3.5) {};
-		\node [style=left align] (117) at (4.75, -3.5) {\texttt{T/NT}};
+		\node [style=right align] (117) at (4.75, -3.5) {\texttt{T/NT}};
 		\node [style=none] (118) at (-1.25, 0) {};
 		\node [style=none] (119) at (-1.25, 1) {};
 		\node [style=none] (121) at (-4.75, 0) {};
@@ -97,7 +97,7 @@
 		\node [style=none] (139) at (10, -2.5) {BHR};
 		\node [style=none] (140) at (17.25, -3.5) {};
 		\node [style=none] (141) at (19.75, -3.5) {};
-		\node [style=left align] (142) at (19.75, -3.5) {\texttt{T/NT}};
+		\node [style=right align] (142) at (19.75, -3.5) {\texttt{T/NT}};
 	\end{pgfonlayer}
 	\begin{pgfonlayer}{edgelayer}
 		\draw [style=light fill] (46.center)
