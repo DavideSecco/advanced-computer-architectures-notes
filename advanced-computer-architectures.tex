@@ -704,7 +704,11 @@ The pipeline \textit{CPI} \textit{(clocks per instruction)} can be calculated ta
         \end{itemize}
 \end{itemize}
 
-\bigskip
+\begin{equation}
+  \text{Pipeline CPI} = \text{Ideal pipeline CPI} + \text{Structural Stalls} + \text{Data Hazard Stalls} + \text{Control Stalls}  
+\end{equation}
+
+\smallskip
 The main features of the pipeline are:
 \begin{itemize}
   \item \textbf{Higher throughput} for the entire workload
@@ -757,12 +761,16 @@ The stages are usually represented in Figure~\ref{fig:mips-pipeline-stages}.
   \bigskip
 \end{figure}
 
+\newpage
+
 \subsection{Pipeline hazards}
 \label{sec:pipeline-hazards}
 
 An \textbf{hazard} is a fault in a pipeline.
 A hazard is created whenever there is a dependence between instructions that are close enough such that the overlap introduced by pipelining would change the order of access to the operands involved in said dependence.
 It prevents the next instruction in the pipeline from executing during its designated clock cycle, reducing the performance from the ideal speedup.
+
+\smallskip
 
 There are \(3\) classes of hazards:
 \begin{enumerate}
@@ -791,14 +799,13 @@ There are \(3\) classes of hazards:
   \item \textbf{Control} hazards \textit{stalls}, due to the request of deciding on the next instruction to execute before the condition itself is evaluated
 \end{enumerate}
 
-\bigskip
+\medskip
 \textit{Data stalls may occur with instructions such as}:
 \begin{itemize}
   \item \textit{RAW} stall:
         \begin{verbatim}
     r3 := (r1) op (r2)
     r5 := (r3) op (r4)  // r3 has not been written yet\end{verbatim}
-
   \item \textit{WAR} stall:
         \begin{verbatim}
     r3 := (r1) op (r2)
@@ -809,7 +816,26 @@ There are \(3\) classes of hazards:
     r3 := (r6) op (r7) // r3 has not been written yet \end{verbatim}
 \end{itemize}
 
+
+
 \subsubsection{Solutions to data hazards}
+
+Hazards limit performance:
+\begin{itemize}
+  \item Structural: need more HW resources
+  \item Data: need forwarding, compiler scheduling
+  \item Control: early evaluation \& PC, delayed branch, predictors   
+\end{itemize}
+
+\begin{remarks}
+  Increasing length of pipe increases impact of hazards  
+\end{remarks}
+
+\begin{remarks}
+  Pipelining helps instruction bandwidth, not latency  
+\end{remarks}
+
+
 
 There are many ways in which data hazards can be solved, such as:
 
@@ -827,11 +853,29 @@ There are many ways in which data hazards can be solved, such as:
   \item \textbf{Hardware} techniques
         \begin{itemize}
           \item \textbf{Insertion} on \textit{bubbles} or \textit{stalls} in the pipeline
-          \item Data \textbf{forwarding} or bypassing
+          \item Data \textbf{forwarding} (bypassing)
         \end{itemize}
 \end{itemize}
 
 Both the compilation and the hardware techniques will be analyzed in depth in Section~\ref{sec:strategies-to-support-ilp}.
+
+\begin{remarks} 
+  \textbf{Problem with Floating point operation} \hfill \break
+  \textit{ADDD, SUBD, MULTD, DIVD} are floating pointing poin operation:
+  \begin{itemize}
+    \item Floating point operation are not commutative ($A+B \ne B+A$), due to approximation
+    \item They take much more clock cycle than interger operation
+    \item They use different type of data (integer and floating point)
+  \end{itemize}
+
+  $\rightarrow$ we need general purpose (integer) registers and floating point registers. 
+\end{remarks}
+
+\medskip
+
+What about mixing Integer and Floating point operations?
+
+\newpage
 
 \subsection{Complex in-order pipeline}
 
@@ -840,27 +884,45 @@ While using floating points operations, a few questions might arise:
 \indentquote{What happens, architecture-wise, when mixing integer and floating point operations? How are different registers handled? How can \textit{GPRs (general purpose registers)} and \textit{FPRs (floating point registers)} be matched?}
 
 \begin{figure}[htbp]
-  \bigskip
+  %\smallskip
   \centering
   \tikzfig[1]{image-8.tikz}
   \caption{Complex-in order pipeline}
   \label{fig:complex-in-order-pipeline}
-  \bigskip
+  %\smallskip
 \end{figure}
-
-In the complex in-order pipeline there isn't a single \textit{ALU} anymore but the execution of floating point operations is split between a number of \textit{Functional Units}.
-The \textit{issue} stage detects conflicts while accessing any of them and it's able to delay the execution \textit{(by using stalls)} of instructions in case of errors.
 
 The pipeline is now constituted by \(6\) stages, normally represented as in Figure~\ref{fig:mips-pipeline-stages-issue}.
 
-\begin{figure}[htbp]
-  \bigskip
+\begin{remarks}
+  QUI cerca di capire cosa si fa in ogni fase e scrivi:
+  \begin{itemize}
+    \item Fetching
+    \item Decode
+    \item Issuing
+    \item Execution
+    \item Write-back
+  \end{itemize}
+\end{remarks}
+
+\begin{figure}[htbp!]
   \centering
   \tikzfig[1.5]{image-9.tikz}
   \caption{Pipeline stages with issue}
   \label{fig:mips-pipeline-stages-issue}
-  \bigskip
 \end{figure}
+
+Formally, all the different executions must be balanced.
+
+\medskip
+
+What does the the issue stage:
+\begin{itemize}
+  \item Separate the registers file
+  \item Pick up the proper functional unit
+\end{itemize}
+
+\medskip
 
 Pipelining becomes complex when we want high performance in the presence of:
 
@@ -868,10 +930,16 @@ Pipelining becomes complex when we want high performance in the presence of:
   \item \textbf{Long latency} or partially pipelined floating point units
   \item \textbf{Multiple functions} and memory units
   \item Memory systems with \textbf{variable access time}
-  \item Precise \textbf{exception}
+  \item Precise \textbf{exception} (think about division by 0)
 \end{itemize}
 
-Formally, all the different executions must be balanced.
+In the complex in-order pipeline:
+\begin{itemize}
+  \item There isn't a single \textit{ALU} anymore but the execution of floating point operations is split between a number of \textit{Functional Units}.
+  \item The \textit{issue} stage detects conflicts while accessing any of them and it's able to delay the execution \textit{(by using stalls)} of instructions in case of errors.
+\end{itemize}
+
+\newpage
 
 \begin{figure}[htbp]
   \bigskip
@@ -879,19 +947,24 @@ Formally, all the different executions must be balanced.
   \tikzfig[0.7]{image-10.tikz}
   \caption{Complex pipelining}
   \label{fig:complex-pipelining-2}
-  \bigskip
 \end{figure}
 
-\bigskip
-The main issues are found in:
-\begin{itemize}
-  \item \textbf{Structural conflicts at the execution stage} if some \textit{FPU} or memory unit is not pipelined and takes more than one cycle
-  \item \textbf{Structural conflicts at the write-back stage} due to variable latencies of different Functional Units (or \textit{FUs})
-  \item \textbf{Out of order write hazards} due to variable latencies of different \textit{FUs}
-  \item Hard to handle exceptions
-\end{itemize}
+Nota che: abbiamo due punti di commit, perchè vogliamo accedere 
+ai due tipi di registri separatamente.
 
-A possible technique to handle write hazards without equalizing all pipeline depths and without bypassing is by delaying all writebacks so all operations have the same latency into the \texttt{WB} stage.
+\begin{remarks}
+  The main issues in complex pipeline are found in:
+  \begin{itemize}
+    \item \textbf{Structural conflicts at the execution stage} if some \textit{FPU} or memory unit is not pipelined and takes more than one cycle
+    \item \textbf{Structural conflicts at the write-back stage} due to variable latencies of different Functional Units (or \textit{FUs})
+    \item \textbf{Out of order write hazards} due to variable latencies of different \textit{FUs}
+    \item Hard to handle exceptions
+  \end{itemize}  
+\end{remarks}
+
+\paragraph{Solve the WB problem}
+
+A possible technique to handle write hazards without equalizing all pipeline depths and without forwarding (bypassing) is by delaying all writebacks so all operations have the same latency into the \texttt{WB} stage.
 In this approach, the following events will happen:
 
 \begin{itemize}
@@ -905,34 +978,49 @@ In this approach, the following events will happen:
         \end{itemize}
 \end{itemize}
 
-How is it possible to prevent increased write-back latency from slowing down single-cycle integer operations?
-Is it possible to solve all write hazards without equalizing all pipeline depths and without bypassing them?
+\textbf{Big problem:} now the integer operations take the amount of clocks cycle than 
+floating point operations (like from 1 cc $\to$ 30 cc). We can't do in this way
+
+\smallskip
+
+Is it possible to solve all write hazards without equalizing all pipeline depths and without forwarding (bypassing) them?
+
+\medskip 
+
+$\rightarrow$ yes, OUT OF ORDER EXECUTION!
+
+\newpage
 
 \subsection{Instructions issuing}
 \label{sec:instructions-issuing}
 
+\begin{remarks}
+  Fetching, deconding and issuing is always happening in order (in that kind of architecture). \\ 
+  In fact our problem is in execution phase.  
+\end{remarks}
+
 To reach higher performance, more parallelism must be extracted from the program.
 In other words, dependencies must be detected and solved, while instructions must be scheduled to achieve the highest parallelism of execution compatible with available resources.
 
-A data structure keeping track of all the instructions in all the functional units is needed.
-In order to work properly, it must make the following checks before the \texttt{issue} stage to dispatch an instruction:
-
-\begin{enumerate}
-  \item Check if the \textbf{functional unit} is available
-  \item Check if the \textbf{input data} is available
-        \begin{itemize}
-          \item \textit{Failure in this step would cause a RAW}
-        \end{itemize}
-  \item Check if it's safe to write to the \textbf{destination}
-        \begin{itemize}
-          \item \textit{Failure in this step would cause a WAR or a WAW}
-        \end{itemize}
-  \item Check if there's a \textbf{structural conflict} at the \texttt{WB} stage
-\end{enumerate}
+\begin{remarks}
+  In order to work properly, before the \texttt{issue} stage a data structure must make the following checks  to dispatch an instruction:
+  \begin{enumerate}
+    \item Check if the \textbf{functional unit} is available
+    \item Check if the \textbf{input data} is available
+          \begin{itemize}
+            \item \textit{Failure in this step would cause a RAW}
+          \end{itemize}
+    \item Check if it's safe to write to the \textbf{destination}
+          \begin{itemize}
+            \item \textit{Failure in this step would cause a WAR or a WAW}
+          \end{itemize}
+    \item Check if there's a \textbf{structural conflict} at the \texttt{WB} stage
+  \end{enumerate}
+\end{remarks}
 
 Such a suitable data structure would look like in Table~\ref{tab:data-structure-keep-track-functional-units}.
 
-\begin{table}
+\begin{table}[!h]
   \bigskip
   \centering
   \begin{tabular}{r|c|cccc}
@@ -970,6 +1058,8 @@ When the checks are all completed:
 
 \bigskip
 Later in the course \textit{(Section~\ref{par:CDC6600-scoreboard})}, this approach will be discussed more in-depth.
+
+\newpage
 
 \subsection{Dependences}
 
@@ -1438,6 +1528,10 @@ For example, if the destination register is an unused temporary register when th
 \subsection{Dynamic Branch Prediction}
 \label{sec:dynamic-branch-prediction}
 
+\begin{remarks}
+  Questa parte il prof dice sarà quasi sicuramente esercizi 
+\end{remarks}
+
 \textit{Basic idea}: use the past branch behaviour to predict the future.
 
 The prediction will depend on the behavior of the branch at \textbf{run time} and
@@ -1476,23 +1570,23 @@ The typical entry of the \textit{BTB} is shown in Figure~\ref{fig:typical-entry-
 The predicted target address is expressed as \texttt{PC}-relative.
 
 \begin{figure}[htbp]
-  \bigskip
+  \smallskip
   \centering
   \tikzfig[1]{image-17.tikz}
   \caption{Typical entry of the \textit{BTB}}
   \label{fig:typical-entry-BTB}
-  \bigskip
+  \smallskip
 \end{figure}
 
 The structure and operation of the \textit{BTB} is shown in Figure~\ref{fig:structure-of-BTB}.
 
 \begin{figure}[htbp]
-  \bigskip
+  \smallskip
   \centering
   \tikzfig[0.8]{image-18.tikz}
   \caption{Structure of the \textit{BTB}}
   \label{fig:structure-of-BTB}
-  \bigskip
+  \smallskip
 \end{figure}
 
 \begin{remarks}
@@ -1640,6 +1734,10 @@ Studies on \(n\)-bit predictors have shown that \(2\) bits behave almost as well
 
 \subsection{Correlating Branch Predictors}
 
+\begin{remarks}
+  Questa parte il prof dice sarà sopratutto nella teoria
+\end{remarks}
+
 \textit{Basic idea}: the behaviour of recent branches is correlated, that is the recent behaviour of other branches rather than just the current branch that we are trying to predict can influence the prediction of the current branch.
 
 \medskip
@@ -1722,6 +1820,11 @@ By comparing the performance of a \(2\)-bit simple predictor with \(4000\) entri
 
 \subsection{Two Level Adaptive Branch Predictors}
 
+\begin{remarks}
+  Questa parte da non fare: il prof non la spiega, serve solo per farci capire che
+  si può sempre fare meglio, ma deve valerne la pena
+\end{remarks}
+
 The first level history is recorded in one \textit{(or more)} \(k\)-bit shift register called \textit{Branch History Register (BHR)} which records the outcomes of the \(k\) most recent branches.
 The second level history is recorded in one \textit{(or more)} tables called \textit{Pattern History Table (PHT)} of two bits saturating counters.
 
@@ -1768,7 +1871,10 @@ The structure of a \textit{GA} predictor is represented in Figure~\ref{fig:GA-pr
 
 The objective of the \textit{ILP} is to improve the \textit{CPI}, with the ideal goal of \(1\) \textit{cycle per instruction}.
 
-The \textit{ILP} implies a potential overlap of execution among unrelated instructions.
+\begin{definition}
+  The \textit{ILP} = potential overlap of execution among unrelated instructions   
+\end{definition}
+
 This goal is only achievable if there is no \textbf{hazards} \textit{(as described in Section~\ref{sec:pipeline-hazards})}.
 
 \medskip
@@ -1849,11 +1955,13 @@ The two main techniques used by hardware to minimize stalls are:
   \item Could generate \textbf{imprecise exception}
 \end{itemize}
 
+\newpage
+
 \subsubsection{CDC6600 Scoreboard}
 \label{par:CDC6600-scoreboard}
 
 As discussed earlier \textit{(Section~\ref{sec:instructions-issuing})}, a specific data structure is needed to solve data dependences without specialized compilers.
-The first implementation of such hardware is found in the \textbf{CDC6600 Scoreboard}, created in \textit{1963}.
+The first implementation of such hardware is found in the \textbf{CDC6600 Scoreboard}, \textit{(1963)}.
 
 Its key idea is to allow instruction behind stalls to proceed, with the result of a \(250\%\) speedup with regards to no dynamic scheduling and a \(170\%\) speedup with regards to instructions reordering by the compiler.
 It has the downside of having a \textbf{slow memory} \textit{(due to the absence of cache)} and \textbf{no forwarding hardware}.
@@ -1919,25 +2027,21 @@ Finally, the scoreboard is structured in three different parts:
         \end{itemize}
 \end{enumerate}
 
-\bigskip
+\smallskip
 An illustration of the new pipeline is represented in Figure~\ref{fig:pipeline-of-scoreboard}, while the structure of the scoreboard is represented in Figure~\ref{fig:structure-of-scoreboard}.
 
 \begin{figure}[htbp]
-  \bigskip
   \centering
   \tikzfig[1]{image-24.tikz}
   \caption{Pipeline introduced by the \textit{Scoreboard}}
   \label{fig:pipeline-of-scoreboard}
-  \bigskip
 \end{figure}
 
 \begin{figure}[htbp]
-  \bigskip
   \centering
   \tikzfig[1]{image-25.tikz}
   \caption{Structure of the \textit{Scoreboard}}
   \label{fig:structure-of-scoreboard}
-  \bigskip
 \end{figure}
 
 \newpage
@@ -1986,10 +2090,11 @@ This structure creates a few implications:
   \item Scoreboard \textbf{keeps track of dependences} and the state of the operations
 \end{itemize}
 
+\newpage
+
 \subsubsection{Tomasulo algorithm}
 
 The Tomasulo algorithm is a \textbf{dynamic} algorithm that allows execution to proceed in presence of dependences.
-It was invented at IBM \(3\) years after \textit{CDC 6600} scoreboard with the same goal.
 
 The key idea behind this algorithm is to \textbf{distribute} the control logic and the buffers within \textit{FUs}, as opposed to the scoreboard \textit{(in which the control logic is centralized)}.
 
@@ -2000,7 +2105,6 @@ Results are then dispatched to other \textit{FUs} through a \textit{Common Data 
 Finally, \texttt{LOAD} and \texttt{STORE} operations are treated as \textit{FUs}, as \textit{RS} are more complex than architectural registers to allow more compiler-level optimizations.
 
 \paragraph{Structure of the Reservation Stations}
-
 The Reservation Station is composed by \(5\) \textbf{fields}:
 
 \begin{itemize}
@@ -2016,7 +2120,7 @@ The Reservation Station is composed by \(5\) \textbf{fields}:
 
 In this description, only one between the \texttt{V}-field and the \texttt{Q}-field is valid for each operand.
 
-\bigskip
+\medskip
 Furthermore, a few more components are needed, such as:
 
 \begin{itemize}
@@ -2033,10 +2137,7 @@ Furthermore, a few more components are needed, such as:
 
 \paragraph{Stages of the Tomasulo Algorithm}
 
-The Tomasulo algorithm is structured in \(3\) different stages: \textbf{Issue}, \textbf{Execute} and \textbf{Write}.
-
-\bigskip
-In more detail:
+The Tomasulo algorithm is structured in \(3\) different stages: \textbf{Issue}, \textbf{Execute} and \textbf{Write}. In more detail:
 
 \begin{enumerate}
   \item \textbf{Issue} stage:

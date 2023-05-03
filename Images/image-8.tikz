@@ -84,9 +84,8 @@
 		\node [style=none] (84) at (29, -4) {};
 		\node [style=none] (85) at (29, 0) {};
 		\node [style=none] (86) at (27, -4) {};
-		\node [style=none] (87) at (0, -4) {};
-		\node [style=none] (88) at (0, 0) {};
-		\node [style=none] (89) at (0.75, -4) {};
+		\node [style=none] (88) at (10, 0) {};
+		\node [style=none] (89) at (10, -2.75) {};
 		\node [style=none, text=white] (90) at (10, -7.675) {\texttt{GPRs}};
 		\node [style=none, text=white] (91) at (10, -8.375) {\texttt{FPRs}};
 		\node [style=none] (92) at (8.5, -7) {};
@@ -169,8 +168,6 @@
 		\draw [style=big] (86.center) to (84.center);
 		\draw [style=big] (84.center) to (85.center);
 		\draw [style=big] (88.center) to (85.center);
-		\draw [style=big] (88.center) to (87.center);
-		\draw [style=big arrow] (87.center) to (89.center);
 		\draw [style=red fill] (94.center)
 			 to (92.center)
 			 to (93.center)
@@ -178,5 +175,6 @@
 			 to cycle;
 		\draw [style=red arrow] (98.center) to (97.center);
 		\draw [style=red arrow] (98.center) to (96.center);
+		\draw [style=big arrow] (88.center) to (89.center);
 	\end{pgfonlayer}
 \end{tikzpicture}
