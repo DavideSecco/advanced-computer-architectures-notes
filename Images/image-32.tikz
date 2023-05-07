@@ -28,8 +28,8 @@
 		\node [style=none] (22) at (0, -4.75) {};
 		\node [style=none] (23) at (4, -4.75) {};
 		\node [style=none] (24) at (2, -5.5) {prologue};
-		\node [style=left align] (29) at (15, -4) {\textit{time}};
-		\node [style=right align, rotate=90] (30) at (-0.75, 0.75) {\textit{performance}};
+		\node [style=right align] (29) at (15, -4) {\textit{time}};
+		\node [style=left align] (30) at (-0.25, 0.75) {\textit{performance}};
 		\node [style=none] (31) at (8, -4) {};
 		\node [style=none] (32) at (10, 0) {};
 		\node [style=none] (33) at (12, 0) {};

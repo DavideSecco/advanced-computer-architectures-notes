@@ -43,8 +43,8 @@
 		\node [style=none] (25) at (6, 2.5) {startup overhead};
 		\node [style=none] (26) at (6, -1) {};
 		\node [style=none] (27) at (18, 2.5) {wind down overhead};
-		\node [style=left align] (29) at (25, -4) {\textit{time}};
-		\node [style=right align, rotate=90] (30) at (-0.75, 0.75) {\textit{performance}};
+		\node [style=right align] (29) at (25, -4) {\textit{time}};
+		\node [style=left align] (30) at (-0.25, 0.75) {\textit{performance}};
 		\node [style=none] (31) at (6, 2) {};
 		\node [style=none] (33) at (7, -1) {};
 		\node [style=none] (34) at (17, -1) {};

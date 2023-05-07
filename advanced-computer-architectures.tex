@@ -898,10 +898,15 @@ The pipeline is now constituted by \(6\) stages, normally represented as in Figu
   QUI cerca di capire cosa si fa in ogni fase e scrivi:
   \begin{itemize}
     \item Fetching
-    \item Decode
-    \item Issuing
+    \item Decode: now just take the op-code of the operation and set the bit in order to performa the proper operation.
+    \item Issuing:
+    \begin{itemize}
+      \item Hazard detection RAW
+      \item Not letting to enter in this phase for WAR and WAW (i don't know if this is in general or for some example)
+      \item Reading the register file (now is here not in the decode stage)
+    \end{itemize}
     \item Execution
-    \item Write-back
+    \item Write-back: Remember that generally in the first clock you can write and in the second you can read.
   \end{itemize}
 \end{remarks}
 
@@ -1058,6 +1063,10 @@ When the checks are all completed:
 
 \bigskip
 Later in the course \textit{(Section~\ref{par:CDC6600-scoreboard})}, this approach will be discussed more in-depth.
+
+\begin{remarks}
+  NON ho capito perchè poi negli esercizi le WAW e le WAR sono trovate prima della issue phase. Mentre
+\end{remarks}
 
 \newpage
 
@@ -1869,6 +1878,14 @@ The structure of a \textit{GA} predictor is represented in Figure~\ref{fig:GA-pr
 
 \section{Instruction Level Parallelism - \textit{ILP}}
 
+\begin{remarks} ILP: \hfill % \break 
+  \begin{itemize}
+    \item Whats is? Architectural technique that allows the overlap of individual machine operations ( add, mul, load, store ...)
+    \item What consist in? Multiple operations will execute in parallel (simultaneously)
+    \item Goal: Speed Up the execution
+  \end{itemize}
+\end{remarks}
+
 The objective of the \textit{ILP} is to improve the \textit{CPI}, with the ideal goal of \(1\) \textit{cycle per instruction}.
 
 \begin{definition}
@@ -1884,6 +1901,24 @@ Two properties are critical to program correctness \textit{(and normally preserv
   \item \textbf{Exception behaviour}: preserving exception behaviour means that any changes in the ordering of instructions execution must not change how exceptions are raised in the program
   \item \textbf{Data flow}: the actual flow of data values among instructions that produce the correct results and consume them
 \end{enumerate}
+
+\paragraph{ILP vs Parallel Processing}
+
+\begin{tabular}{m{24em} m{24em}}
+  ILP (even single core) & PARALLEL PROCESSING
+  \\
+  \begin{itemize}
+    \item  Overlap individual machine operations (add, mul, load...) so that they execute in parallel
+    \item Transparent to the user
+    \item Goal: speed up execution
+  \end{itemize}
+  & 
+  \begin{itemize}
+    \item Having separate processors getting separate chunks of the program (processors programmed to do so)
+    \item Nontransparent to the user
+    \item Goal: speed up and quality up
+  \end{itemize}
+\end{tabular}
 
 \subsection{Strategies to support \textit{ILP}}
 \label{sec:strategies-to-support-ilp}
@@ -1920,7 +1955,7 @@ The two main techniques used by hardware to minimize stalls are:
 \begin{itemize}
   \item \textbf{Forwarding}
         \begin{itemize}
-          \item The result from the \texttt{EX/MEM} and the \texttt{EX/WB} pipeline registers is \textbf{fed back} to the \texttt{ALU} inputs
+          \item The result from the \texttt{EX/MEM} and the \texttt{EX/WB} pipeline registers is \textbf{fed back} (rimmessi) to the \texttt{ALU} inputs
           \item If the forwarding hardware detects that the previous \texttt{ALU} operation has \textbf{written the register corresponding to a source for the current} \texttt{ALU} operation:
                 \begin{itemize}
                   \item control logic selects the forwarded result as the \texttt{ALU} input
@@ -2374,13 +2409,44 @@ The compiler outputs dependency-free code.
   \item High compiler \textbf{complexity}
 \end{itemize}
 
+\newpage
+
 \subsection{VLIW architectures}
+
+\begin{remarks}
+  Lo scopo è sempre aumentare ILP (obbiettivo CPI < 1) in questo caso lo facciamo con una tecnica statica, sofware
+\end{remarks}
 
 The \textbf{Very Long Instruction Words} \textit{(VLIW)} is a particular architecture made specifically to fetch more instructions at a time.
 The \textit{CPU} issues multiple sets of operations \textit{(single unit of computations, such as \texttt{ADD}, \texttt{LOAD}, \texttt{branch}, \ldots) }called \textbf{instructions}.
 Those are meant to be intended to be issued at the same time and the compiler has to specify them completely.
 
-\bigskip
+
+Operation vs instruction:
+\begin{definition}
+  Operation: is a unit of computation (add, load,
+branch = instruction in sequential ar.)  
+\end{definition}
+
+\begin{definition} \textbf{Instruction:} set of operations that are intended to be issued simultaneously  
+\end{definition}
+
+\begin{remarks} \hfill
+  \begin{itemize}
+    \item Compiler decides which operation to go to each instruction (scheduling)
+    \item All operations that are supposed to begin at the same time are packaged into a single
+    VLIW instruction
+    \item We don't issue multiple istructions, we issue a single instruction (so we a single PC) very complex because is composed of mulitple operation.
+  \end{itemize} 
+\end{remarks}
+
+\begin{remarks}
+  Till now was the architecture that do everything for us: deals with hazards ecc\dots 
+  Now all is up to compiler, our hardware is stupid. The compiler has to guarantee the dependences free code, because otherwise our simpler architecture is not able to deal with those hazards.
+  Now there is the problem of binary compatibility:   
+\end{remarks}
+
+\smallskip
 Its features include:
 
 \begin{itemize}
@@ -2413,14 +2479,30 @@ Its features include:
 There are multiple \textbf{functional units} \textit{(FUs)} that are going to execute instructions in parallel.
 An illustration of the inner working instruction level is represented in Figure~\ref{fig:vliw-instruction-level}, while the pipeline level is represented in Figure~\ref{fig:vliw-pipeline-level}.
 
+\newpage
+
 \begin{figure}[htbp]
-  \bigskip
   \centering
   \tikzfig[1]{image-26.tikz}
   \caption{\textit{VLIW} - instructions level}
   \label{fig:vliw-instruction-level}
-  \bigskip
 \end{figure}
+
+\begin{itemize}
+  \item Multiple operations packed into one instruction
+  \item Each operation slot is for a fixed function
+  \item Constant operation latencies are specified
+  \item Architecture requires guarantee of:
+  \begin{itemize}
+    \item Parallelism within an instruction => no x-operation RAW check
+    \item No data use before data ready => no data interlocks
+  \end{itemize}
+\end{itemize}
+
+In this exampmle we can deal 2 integer op, 2 memory op, 2 floating point op.
+
+We have to guaratee that those operations, scheduled in this VLIW hasn't conflict and no any dependences among those instructions.
+All that dependeces are solved by the compiler. 
 
 \begin{figure}[htbp]
   \bigskip
@@ -2431,7 +2513,16 @@ An illustration of the inner working instruction level is represented in Figure~
   \bigskip
 \end{figure}
 
-\subsubsection{Compiler responsibilities}
+Note that in the complex pipeline we have multiple functional unit but the issue phase was blocking us in making one issue at the time $\to$ single issue architecture
+VLIW is not a a proper multiple issue, but the point  that we are exectiting in paralled multiple operations. 
+
+\medskip
+
+But... Is it always possible schedule 6 kind of operations completely in parallel? No... dependes on the code. Dependeces are big problems for that kind of architecture.
+
+\newpage
+
+\subsubsection{Compiler responsibilities: what the compiler has to do}
 
 The \textbf{compiler} has to schedule the instructions \textit{(via \textbf{static scheduling})} to maximize the parallel execution:
 
@@ -2449,18 +2540,23 @@ The idea behind the static scheduling in \textit{VLIW} is to utilize all functio
 Compilers use sophisticated algorithms to schedule code and exploit \textit{ILP}.
 However, the amount of parallelism available in a single \textbf{basic block}, as previously pointed out, is quite small; furthermore, \textbf{data dependence} can limit the amount of \textit{ILP} that can be exploited to less than the average block size.
 
-A \textbf{basic block} \textit{(BB)} is defined as a sequence of straight non-branch instructions.
+\begin{definition}
+  \textbf{Basic block \textit{(BB)}:}  sequence of straight non-branch instructions, that are for sure, serially exectuted.
+\end{definition}
 
-In order to obtain substantial performance enhancements, the \textit{ILP} must be exploited across multiple blocks (\textit{i.e.} among branches).
-An illustration of the structure of \textit{BB} can be found in Figure~\ref{fig:basic-blocks}.
+\begin{definition}
+  \textbf{Trace:} sequence of basic blocks embedded in the control flow graph. 
+  
+  \smallskip
 
-\bigskip
-A \textbf{trace} is a sequence of basic blocks embedded in the control flow graph.
-It must not contain loops but it can include branches.
+  It must not contain loops but it can include branches.
 
-It's an \textbf{execution path} which can be taken for a certain set of inputs.
-The chances that a trace is executed depend on the input set that allows its execution.
-As a result, some traces are executed much more frequently than others.
+  \smallskip
+
+  It's an \textbf{execution path} which can be taken for a certain set of inputs.
+  The chances that a trace is executed depend on the input set that allows its execution.
+  As a result, some traces are executed much more frequently than others (think about code inside loops). 
+\end{definition}
 
 The tracing scheduling algorithm works as follows:
 
@@ -2479,31 +2575,34 @@ However, this choice might not be clear for some programs.
 
 In general, compensation codes are not easy to generate for entry points.
 
-\bigskip
+\smallskip
 A comparison of scheduled and unscheduled codes can be found in Figure~\ref{fig:compare-scheduled-unscheduled-code}.
 
 \begin{figure}[htbp]
-  \bigskip
   \centering
 
   \begin{subfigure}[b]{0.495\textwidth}
     \centering
-    \tikzfig[0.7]{image-28.tikz}
+    \tikzfig[0.8]{image-28.tikz}
     \caption{Basic blocks}
     \label{fig:basic-blocks}
   \end{subfigure}
   \begin{subfigure}[b]{0.495\textwidth}
     \centering
-    \tikzfig[0.7]{image-29.tikz}
+    \tikzfig[0.8]{image-29.tikz}
     \caption{Trace scheduled code}
     \label{fig:trace-scheduled-code}
   \end{subfigure}
   \caption{Comparison of scheduled and unscheduled code}
   \label{fig:compare-scheduled-unscheduled-code}
-  \bigskip
 \end{figure}
 
+\newpage
+
 \paragraph{Code motion and Rotating Register Files in Trace Scheduling}
+\begin{remarks}
+  Non ho visto fare questa parte
+\end{remarks}
 
 In addition to the need for compensation codes, there are a few more restrictions on the movement of a code trace:
 
@@ -2540,8 +2639,8 @@ An illustration of the \textit{RRB} is shown in Figure~\ref{fig:rotating-registe
 
 \textit{Pros}:
 \begin{itemize}[label=\cmarkthin]
-  \item \textbf{Simple} \textit{HW}
-  \item It's \textbf{easy} to increate the number of FU
+  \item \textbf{Simple} \textit{HW} ($\to$ energy-saving)
+  \item It's \textbf{easy} to increase the number of FU
   \item Good \textbf{compilers} can efficiently \textbf{detect parallelism}
 \end{itemize}
 
@@ -2557,6 +2656,8 @@ An illustration of the \textit{RRB} is shown in Figure~\ref{fig:rotating-registe
   \item H\textbf{igh bandwidth} between instruction cache and fetch unit
   \item \textbf{Large code} size
 \end{itemize}
+
+\newpage
 
 \subsubsection{Static Scheduling methods}
 
@@ -2574,6 +2675,16 @@ The static scheduling methods used in the \textit{VLIW} are:
           \item \textbf{Speculative} Trace scheduling
         \end{itemize}
 \end{itemize}
+
+\paragraph{Simple code motion}
+\label{par:simple-code-motion}
+
+We can reaschedule (move) part of our code from a portion of a program to another.   
+
+\begin{figure}[!h]
+  \centering
+  \includegraphics[scale=0.4]{Simple_Code_Motion.png}
+\end{figure}
 
 \paragraph{Loop unrolling}
 \label{par:loop-unrolling}
@@ -2596,9 +2707,26 @@ the inner loop gets \textit{unrolled} in order to execute \(4\) iterations at on
   }
 \end{verbatim}
 
+The performance:
+
+\begin{tabular}{m{22em} m{22em}}
+  \includegraphics[scale=0.26]{Loop_execution.png}
+  &
+  \includegraphics[scale=0.26]{Loop_exectution_with_unrolling.png}
+\end{tabular}
+
+\begin{remarks}
+  NOTA (HAI UN DUBBIO): Why in the unrolled version we didn't put \textit{ld F2} in the M2 in the same cc of \textit{ld F2}? 
+  \begin{itemize}
+    \item preserve structure (very very important)
+    \item doesn't affect the performance (we have only one FU for FP+)
+  \end{itemize}
+\end{remarks}
+
+
 A final clean-up is needed to take care of those values of \texttt{N} that are not multiples of the unrolling factor \textit{(\(4\) in this example)}.
 
-This technique has the drawbacks of creating \textbf{longer code} and \textbf{losing performance} due to the costs of starting and closing each iteration.
+This technique has the drawbacks of creating \textbf{longer code} and \textbf{losing performance} due to the costs of starting and closing each iteration (probably we can do better).
 Furthermore, trace scheduling cannot proceed beyond a loop.
 
 \bigskip
@@ -2612,9 +2740,24 @@ An illustration of the performance improvements can be found in Figure~\ref{fig:
   \label{fig:performance-improvement-loop-unrolling}
   \bigskip
 \end{figure}
+ 
+\begin{remarks}
+  Note this technique is useful only if you don't have \textbf{loop-carried-dependencies}.
+\end{remarks}
+
+\newpage
 
 \paragraph{Software pipelining}
 \label{par:software-pipelining}
+
+\begin{remarks}
+  In loop unrolling we execute the iterations serially, we can somehow pipeline the iteration. Overlap as much as you can.
+\end{remarks}
+
+\begin{figure}[!h]
+  \centering
+  \includegraphics[scale=0.5]{Loop_execution_with_software _pipelining.png}
+\end{figure}
 
 The programs can be pipelined in order to increase performance and reduce the overall cost of the startup and wind down phases from once per iteration to once per loop.
 
