@@ -2544,18 +2544,17 @@ However, the amount of parallelism available in a single \textbf{basic block}, a
   \textbf{Basic block \textit{(BB)}:}  sequence of straight non-branch instructions, that are for sure, serially exectuted.
 \end{definition}
 
-\begin{definition}
-  \textbf{Trace:} sequence of basic blocks embedded in the control flow graph. 
-  
-  \smallskip
-
-  It must not contain loops but it can include branches.
-
-  \smallskip
-
-  It's an \textbf{execution path} which can be taken for a certain set of inputs.
-  The chances that a trace is executed depend on the input set that allows its execution.
-  As a result, some traces are executed much more frequently than others (think about code inside loops). 
+\begin{definition} \textbf{Trace:} 
+  \begin{itemize}
+    \item is a \textbf{loop-free sequence} of basic blocks
+  embedded in the control flow graph (Fisher). It can include branches.
+    \item is an \textbf{execution path} which can be taken for some
+    set of inputs
+    \item The chances that a trace is actually executed
+    depends on the input set that allows its execution
+  \end{itemize}
+  \textbf{Some} traces are executed \textbf{much more frequently} than others (think about code inside loops).
+  \label{def:trace}
 \end{definition}
 
 The tracing scheduling algorithm works as follows:
@@ -2598,42 +2597,6 @@ A comparison of scheduled and unscheduled codes can be found in Figure~\ref{fig:
 \end{figure}
 
 \newpage
-
-\paragraph{Code motion and Rotating Register Files in Trace Scheduling}
-\begin{remarks}
-  Non ho visto fare questa parte
-\end{remarks}
-
-In addition to the need for compensation codes, there are a few more restrictions on the movement of a code trace:
-
-\begin{enumerate}[label=\Alph*), ref=(\Alph*)]
-  \item \label{enum:data-flow-trace-scheduling} The \textbf{data flow} of the program must not change
-  \item \label{enum:exception-behaviour-trace-scheduling} The \textbf{exception behaviour} must be preserved
-\end{enumerate}
-
-\bigskip
-
-In order to ensure \ref{enum:data-flow-trace-scheduling}, the \textbf{Data} and \textbf{Control} dependency must be maintained.
-Furthermore, control dependency can be eliminated using \textbf{predicate instructions} \textit{(via Hyperblock scheduling) }and branch removal or by using \textbf{speculative instructions} \textit{(via Speculative Scheduling)} and speculatively moving instructions before branches.
-
-Finally, Trace Scheduling within loops requires lots of registers, due to the duplicated code:
-to solve this issue, a new set of registers must be allocated for each iteration.
-
-This solution is achieved via the use of \textbf{Rotating Register Files} \textit{(RRB)}.
-The address of the \textit{RRB} register points to the base of the current register set.
-The value added onto a local register specifier gives a physical register number.
-
-\bigskip
-An illustration of the \textit{RRB} is shown in Figure~\ref{fig:rotating-register-file}.
-
-\begin{figure}[htbp]
-  \bigskip
-  \centering
-  \tikzfig[1]{image-30.tikz}
-  \caption{Rotating Register File}
-  \label{fig:rotating-register-file}
-  \bigskip
-\end{figure}
 
 \subsubsection{Pros and cons of \textit{VLIW}}
 
@@ -2773,14 +2736,178 @@ An illustration of the performance improvements can be found in Figure~\ref{fig:
   \bigskip
 \end{figure}
 
+\newpage
+
 \paragraph{Trace scheduling}
 \label{par:trace-scheduling}
 
-As discussed in Section~\ref{sec:trace-scheduling}, Trace Scheduling does not support loops.
+\begin{remarks}
+  NON CI SARANNO ESERCIZI SU QUESTA PARTE (SANTAMBROGIO). E devi dire la verità, non ho capito bene.
+\end{remarks}
+
+Now we need something in case we don't have loops. Trace Scheduling is what we need, in fact it does not support loops.
+
+\medskip
+
+Trace scheduling focuses on \textit{\hyperref[def:trace]{trace}}. The basic steps are:
+
+\begin{enumerate}
+  \item Pick a trace that is most frequent branch path
+  \item Use profiling feedback, benchmarks, profiling to find most frequent branch paths
+  \begin{itemize}
+    \item Traces scheduling schedules traces in order of
+    decreasing probability of being executed
+    \begin{itemize}
+      \item So, most frequently executed traces get better schedules
+      \item Traces are scheduled as if they were basic blocks (no special considerations for branches)   
+    \end{itemize}
+  \end{itemize}
+  \item Schedule whole “trace” at once 
+  \item Add fixup code to cope with branches jumping out of trace
+\end{enumerate}
+
+What if we meet a loop?
+\begin{itemize}
+  \item Trace scheduling cannot proceed beyond a loop barrier
+  \item Techniques used to overcome this limitation are based on
+  loop unrolling. Negative effects on unrolling:
+  \begin{itemize}
+    \item Unrolling produces much extra code
+    \item It also looses performance, because of the costs of starting
+    and closing the iterations  
+  \end{itemize}
+\end{itemize}
+ 
+\medskip
+
+Scheduling in a trace rely on basic code motion but now
+has a global taste across more that one basic block by
+appropriate use of renaming (NON HO CAPITO QUESTA FRASE)
+
+\smallskip
+
+\textbf{Compensation codes are needed:}
+\begin{itemize}
+  \item for side entry points: i.e. points except beginning
+  \item and slide exit points: i.e. points except ending  
+\end{itemize}
+Blocks on non common path may now have added
+overhead, so there must be a high probability of taking
+common path according to profile (may not be clear for
+some programs)
+
+\smallskip
+
+Problems: compensation codes are difficult to generate
+specially for entry points
+
+\begin{example} \textbf{Trace Scheduling} \hfill \break
+  For example suppose that B1,B3,B4,B5,B7 is the most frequently executed path
+  
+  \begin{tabular}{m{22em} m{22em}}
+    Therefore traces are
+    \begin{itemize}
+      \item B1,B3
+      \item B4
+      \item B5,B7
+    \end{itemize}
+    Remember that a Trace is a sequence of BB without loops. But B4 is a loop, so the trace have to be divided in that way.
+    
+    \medskip
+
+    \textbf{Eache trace is scheduled independently}
+    &
+    \includegraphics[scale=0.25]{Trace_Scheduling_Example.png}  
+  \end{tabular}
+\end{example}
+
+\begin{remarks} \textbf{Perchè spostare le istruzioni nel VLIW?}
+  Magari in un ciclo di VLIW hai esaurito lo spazio per le integer operation ma ne avresti ancora altre da eseguire.
+  Allora puoi spostarla avanti per eseguirla successivamente e magari quindi anticipare un operazione di floating point 
+  nel caso ci sia ancora posto nella VLIW.
+\end{remarks}
+
+\begin{example} \textbf{Trace Scheduling Compensation 1} \hfill \break
+  \includegraphics[scale=0.3]{Trace_Scheduling_Compensation_1.png}
+\end{example}
+
+\begin{example} \textbf{Trace Scheduling Compensation 2} \hfill \break
+  \includegraphics[scale=0.4]{Trace_Scheduling_Compensation_2.png}
+\end{example}
+
+\begin{remarks}
+  Con questi due example potresti capire perchè si parla di \textbf{code explosion}. 
+  Ma non influenzeranno effettivamente, perchè tu userai magari slot del VLIW che altrimenti sarebbero inutilizzati!
+\end{remarks}
+
+\paragraph{Code Motion in Trace Scheduling}
+
+\begin{remarks}
+  MOLTO MOLTO DIFFICILE E SPIAGATA MALE
+\end{remarks}
+In addition to need of compensation codes there are
+restrictions on movement of a code in a trace:
+\begin{itemize}
+  \item The \textbf{dataflow} of the program must not change \\
+  Dataflow can be guaranteed to be correct by maintaining two dependencies:
+  \begin{itemize}
+    \item Data dependency
+    \item Control dependency \\ 
+    There are two solutions to eliminate control dependency:
+    \begin{itemize}
+      \item By use of predicate instructions (Hyperblock scheduling) and
+      removing the branch.
+      \item By use of \textbf{speculative instructions (Speculative Scheduling)}
+      and speculatively move an instruction before the branch. Magari metto un istruzione molto lunga che è dentro l'if, prima del branch, cosi ho due possibilità ho entro nell'if e il lavoro è ok, oppure vado nell'else e devo eliminare/dimeticare quella istruzione.
+    \end{itemize} 
+  \end{itemize}
+  \item The \textbf{exception behavior} must be preserved
+\end{itemize}
+
+
+
+
 
 To increase the performance in these situations, techniques based on loop unrolling are needed.
 Traces scheduling schedules traces in order of decreasing probability of being executed.
 As such, the most frequently executed traces get better schedules.
+
+\paragraph{Code motion and Rotating Register Files in Trace Scheduling}
+\begin{remarks}
+  Non ho visto fare questa parte
+\end{remarks}
+
+In addition to the need for compensation codes, there are a few more restrictions on the movement of a code trace:
+
+\begin{enumerate}[label=\Alph*), ref=(\Alph*)]
+  \item \label{enum:data-flow-trace-scheduling} The \textbf{data flow} of the program must not change
+  \item \label{enum:exception-behaviour-trace-scheduling} The \textbf{exception behaviour} must be preserved
+\end{enumerate}
+
+\bigskip
+
+In order to ensure \ref{enum:data-flow-trace-scheduling}, the \textbf{Data} and \textbf{Control} dependency must be maintained.
+Furthermore, control dependency can be eliminated using \textbf{predicate instructions} \textit{(via Hyperblock scheduling) }and branch removal or by using \textbf{speculative instructions} \textit{(via Speculative Scheduling)} and speculatively moving instructions before branches.
+
+Finally, Trace Scheduling within loops requires lots of registers, due to the duplicated code:
+to solve this issue, a new set of registers must be allocated for each iteration.
+
+This solution is achieved via the use of \textbf{Rotating Register Files} \textit{(RRB)}.
+The address of the \textit{RRB} register points to the base of the current register set.
+The value added onto a local register specifier gives a physical register number.
+
+\bigskip
+An illustration of the \textit{RRB} is shown in Figure~\ref{fig:rotating-register-file}.
+
+\begin{figure}[htbp]
+  \bigskip
+  \centering
+  \tikzfig[1]{image-30.tikz}
+  \caption{Rotating Register File}
+  \label{fig:rotating-register-file}
+  \bigskip
+\end{figure}
+
 
 \clearpage
 
