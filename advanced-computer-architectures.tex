@@ -1992,41 +1992,47 @@ The two main techniques used by hardware to minimize stalls are:
 
 \newpage
 
-\subsubsection{CDC6600 Scoreboard}
+\subsubsection{Scoreboard CDC6600}
 \label{par:CDC6600-scoreboard}
 
 As discussed earlier \textit{(Section~\ref{sec:instructions-issuing})}, a specific data structure is needed to solve data dependences without specialized compilers.
 The first implementation of such hardware is found in the \textbf{CDC6600 Scoreboard}, \textit{(1963)}.
 
-Its key idea is to allow instruction behind stalls to proceed, with the result of a \(250\%\) speedup with regards to no dynamic scheduling and a \(170\%\) speedup with regards to instructions reordering by the compiler.
+\begin{remarks} \hfill
+  \begin{itemize}
+    \item \textbf{Starting Situation:} a 6-stages complex pipeline with floating point operation and issue-phase.  
+    \item \textbf{Problem:} data dependences that cannot be hidden with bypassing or forwarding cause hardware stalls of the pipeline
+    \item \textbf{Solution:} allow instructions behind a stall to proceed: HW rearranges the instruction execution to reduce stalls
+    \begin{itemize}
+      \item Enables out-of-order execution and completion (commit): Out-of order execution introduces possibility of WAR, WAW data hazards
+    \end{itemize}
+  \end{itemize}
+\end{remarks}
+
+
+
+\begin{remarks} \textbf{When is it Safe to Issue an Instruction?} \hfill \break
+  Suppose a data structure keeps track of all the instructions in all the functional units
+  The following checks need to be made before the Issue stage can dispatch (spedire) an instruction
+  \begin{itemize}
+    \item Is the required function unit available?
+    \item Is the input data available? → RAW?
+    \item Is it safe to write the destination? → WAR? WAW?
+    \item Is there a structural conflict at the WB stage?
+  \end{itemize}
+\end{remarks}
+
+
+
+With the result of a \(250\%\) speedup with regards to no dynamic scheduling and a \(170\%\) speedup with regards to instructions reordering by the compiler.
 It has the downside of having a \textbf{slow memory} \textit{(due to the absence of cache)} and \textbf{no forwarding hardware}.
 Furthermore, it has a low number of \textit{FUs} and it does not issue structural hazards.
 
 It solves the issue of data dependencies that cannot be hidden with bypassing or forwarding due to the hardware stalls of the pipeline by allowing out-of-order execution and commit of instructions.
 
 \medskip
-The scoreboard centralizes hazard management.
-It can avoid them by:
 
-\begin{itemize}
-  \item Dispatching \textbf{instructions} in order to functional units provided there's no structural hazard or \textit{WAW}
-        \begin{itemize}
-          \item a \textbf{stall} is added on structural hazards \textit{(when no functional unit is available)}
-          \item there can be only one pending write to each register
-        \end{itemize}
-  \item Instructions \textbf{wait} for input operands to avoid \textit{RAW} hazards
-        \begin{itemize}
-          \item as a result, it can execute out-of-order instructions
-        \end{itemize}
-  \item Instructions \textbf{wait} for output register to be read by preceding instructions to avoid \textit{WAR} hazards
-        \begin{itemize}
-          \item results are held in functional units until the register is freed
-        \end{itemize}
-\end{itemize}
-
-\medskip
-The scoreboard is operated by:
-
+textbf{The scoreboard centralizes hazard management}:
 \begin{enumerate}
   \item \textbf{Sending} each instruction through it
   \item \textbf{Determining} when the instruction can read its operands and subsequently start its execution
@@ -2034,11 +2040,21 @@ The scoreboard is operated by:
   \item \textbf{Controlling} when instruction can write results
 \end{enumerate}
 
-As a result, a new pipeline is introduced, where the \texttt{ID} stage is divided into two parts:
+\begin{remarks}
+  As a result, \textbf{a new pipeline is introduced}, where \texttt{ID} stage is divided into two parts:
 \begin{enumerate}
   \item \textit{issue}, where the instruction is decoded and \textbf{structural hazards} are checked
   \item \textit{read operands}, where the operation waits until there are no \textbf{data hazards}
-\end{enumerate}
+\end{enumerate}  
+\end{remarks}
+
+\begin{figure}[htbp]
+  \centering
+  \tikzfig[1]{image-24.tikz}
+  \caption{Pipeline introduced by the \textit{Scoreboard}}
+  \label{fig:pipeline-of-scoreboard}
+\end{figure}
+
 
 Finally, the scoreboard is structured in three different parts:
 \begin{enumerate}
@@ -2065,12 +2081,22 @@ Finally, the scoreboard is structured in three different parts:
 \smallskip
 An illustration of the new pipeline is represented in Figure~\ref{fig:pipeline-of-scoreboard}, while the structure of the scoreboard is represented in Figure~\ref{fig:structure-of-scoreboard}.
 
-\begin{figure}[htbp]
-  \centering
-  \tikzfig[1]{image-24.tikz}
-  \caption{Pipeline introduced by the \textit{Scoreboard}}
-  \label{fig:pipeline-of-scoreboard}
+\begin{figure}[!h]
+  \includegraphics[scale=0.4]{Scoreboard_Table.png}
 \end{figure}
+
+
+The instruction i at the Issue stage consults this table
+\begin{itemize}
+  \item FU available? check the busy column
+  \item RAW? search the dest column for i’s sources
+  \item WAR? search the source columns for i’s destination
+  \item WAW? search the dest column for i’s destination
+\end{itemize}
+An entry is added to the table if no hazard is detected;
+An entry is removed from the table after Write-Back
+
+
 
 \begin{figure}[htbp]
   \centering
@@ -2086,7 +2112,7 @@ An illustration of the new pipeline is represented in Figure~\ref{fig:pipeline-o
 The four stages of scoreboard control are:
 
 \begin{itemize}
-  \item \textbf{Issue}: instructions are decoded and structural hazards \textit{(WAW)} are checked for
+  \item \textbf{Issue}: instructions are decoded and \textbf{structural hazards} and \textbf{\textit{(WAW)}} are checked for
         \begin{itemize}
           \item instructions are issued in program order for hazard checking
           \item if the \textit{FU} for the instruction is free and no other active instruction has the same destination register, the scoreboard issues the instruction and updates its internal data structure
@@ -2106,12 +2132,12 @@ The four stages of scoreboard control are:
         \end{itemize}
   \item \textbf{Write result}: the execution is finished
         \begin{itemize}
-          \item once the scoreboard is aware that the \textit{FU} has completed the execution, it checks for \textit{WAR} hazards
+          \item once the scoreboard is aware that the \textit{FU} has completed the execution, it \textbf{checks for \textit{WAR} hazards}
                 \begin{itemize}
                   \item if no \textit{WAR} hazard is found, the result is written
                   \item otherwise, the execution is stalled
                 \end{itemize}
-          \item \textbf{issue} and \textbf{write} stages can overlap
+          \item \textbf{issue} and \textbf{write} stages \textbf{can overlap} (in realtà non sono certo... forse dipende)
         \end{itemize}
 \end{itemize}
 
@@ -2124,6 +2150,41 @@ This structure creates a few implications:
   \item \textbf{Multiple instructions must be dispatched} in the execution phase, creating the need for multiple or pipelined execution units
   \item Scoreboard \textbf{keeps track of dependences} and the state of the operations
 \end{itemize}
+
+\begin{remarks}
+  NON HO CAPITO: Perchè per le WAW stalliamo e non facciamo nemmeno la issue, mentre per le WAR posso eseguire e aspettare solo al WB?
+\end{remarks}
+
+\paragraph{Riassunto per esercizi:}
+
+\begin{tabular}{|m{10.5em}|m{10.5em} | m{10.5em} | m{10.5em} |}
+  \hline
+  \multicolumn{1}{|c|}{ISSUE} & \multicolumn{1}{|c|}{READ OPERAND} & \multicolumn{1}{|c|}{EXE COMPLETE} & \multicolumn{1}{|c|}{WB}\\
+  \hline 
+  Decode instruction & Read operands & Operate on operands & Finish exec \\
+  \hline 
+  \begin{itemize}[left=0pt]
+    \item Structural FUs check
+    \item WAW checks 
+  \end{itemize}
+  & 
+  \begin{itemize}[left=0pt]
+    \item RAW checks;
+    \item WAW checks if need to read 
+  \end{itemize}
+  &
+  \begin{itemize}[left=0pt]
+    \item Notify Scoreboard on completion 
+  \end{itemize}
+  &
+  \begin{itemize}[left=0pt]
+    \item WAR check;
+    \item Struct check (FUs will hold results)
+    \item ... 
+  \end{itemize}
+  \\
+  \hline
+\end{tabular}
 
 \newpage
 
@@ -3911,7 +3972,7 @@ Operations of the two models:
           \item Logically shared data is \textbf{partitioned} over local processes
           \item Processes communicate by explicitly \textbf{sending} and \textbf{receiving} messages
                 \begin{itemize}
-                  \item the most common software interface to pass messages is called Message Passing Interface \textit{(MPI)}
+                  \item %the most common software interface to pass messages is called Message Passing Interface \textit{(MPI)}
                 \end{itemize}
         \end{itemize}
 \end{itemize}
